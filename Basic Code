@@ -1,0 +1,107 @@
+
+
+
+
+
+
+SQL CODE FOR TECHNICAL DOCUMENT
+Customer Count & Payment Per Country
+SELECT country,
+       COUNT(DISTINCT A.customer_id) AS customer_count,
+       SUM(amount) AS total_payment
+FROM customer A
+INNER JOIN address B ON A.address_id = B.address_id
+INNER JOIN city C ON B.city_id = C.city_id
+INNER JOIN country D ON C.country_ID = D.country_ID
+INNER JOIN payment E ON a.customer_id = E.customer_id
+GROUP BY country
+
+Descriptive Statistics Film Table
+SELECT MIN(rental_rate) AS min_renatl_rate,
+MAX(rental_rate) AS max_rental_rate,
+AVG(rental_rate) AS avg_rental_rate,
+MIN(rental_duration) AS min_rental_duration,
+MAX(rental_duration) AS max_rental_duration,
+AVG(rental_duration) AS avg_rental_duration,
+MIN(film_id) AS min_film,
+MAX(film_id) AS max_film,
+AVG(film_id) AS avg_film,
+MIN(language_id) AS min_language,
+MAX(language_id) AS max_language,
+AVG(language_id) AS avg_language,
+MIN(length) AS min_length,
+MAX(length) AS max_length,
+AVG(length) AS avg_length,
+MIN(replacement_cost) AS min_replacement_cost,
+MAX(replacement_cost) AS max_replacement_cost,
+AVG(replacement_cost) AS avg_replacement_cost
+FROM film
+
+Descriptive Statistics Customer Table
+SELECT MIN(active) AS min_active,
+MAX(active) AS max_active,
+AVG(active) AS avg_active,
+MIN(address_id) AS min_address,
+MAX(address_id) AS max_address,
+AVG(address_id) AS avg_address,
+MIN(customer_id) AS min_customer,
+MAX(customer_id) AS max_customer,
+AVG(customer_id) AS avg_customer,
+MIN(store_id) AS min_store,
+MAX(store_id) AS max_store,
+AVG(store_id) AS avg_store
+FROM customer;
+
+Top 10 Countries for Rockbuster in Terms of Customer Numbers.
+SELECT D.country, count(A.customer_id) as number_of_customers
+FROM Customer A
+INNER JOIN address B on A.address_id = B.address_id
+INNER JOIN city C on B.city_id = C.city_id
+INNER JOIN country D on C.country_id = D.country_id
+GROUP BY D.country
+ORDER BY COUNT(A.customer_id) DESC
+LIMIT 10
+
+Top 10 Cities within the Top 10 countries
+SELECT C.city, D.country, count(A.customer_id) as number_of_customers
+FROM Customer A
+INNER JOIN address B on A.address_id = B.address_ID
+INNER JOIN city C on B.city_id = C. city_id
+INNER JOIN country D on C.country_id = D.country_id
+WHERE D.country IN ('India', 'China', 'United States','Japan','Mexico','Brazil','Russian Federation',
+'Philippines')
+GROUP BY C.city, D.COuntry
+ORDER BY COUNT (A.customer_id) DESC
+LIMIT 10
+
+Top 5 Customers in the Top 10 Cities who have Highest Payment
+SELECT A.customer_id
+A.first_name
+A.last_name
+D.city
+E.country
+SUM (B.Amount) as total_amount_paid
+FROM Customer A
+INNER JOIN payment B on A.customer_Id = B.customer_id
+INNER JOIN address c on A.address_id= C.address_id
+INNER JOIN city D on C.city_id = D.city_id
+INNER JOIN country E on D.country_id = E.country_ID
+WHERE D.city IN ('Aurora','Atlixco','Xintai','Adoni','Dhule(Dhulia)',
+'Kurashiki','Pingxiang', 'Ozamis','Nezahualcyotl','So Leopoldo')
+GROUP BY A.customer_id, A.first_name, A.last_name, D.city, E.country
+ORDER BY total_amount_paid DESC
+LIMIT 5
+
+Total Revenue Of Film by Genre
+SELECT D.name,
+SUM (F.amount) as Total_Revenue_By_Genre
+FROM film A
+INNER JOIN inventory B on B.film_id = A.film_id
+INNER JOIN film_category C on C.film_id=B.film_id
+INNER JOIN category D on D.category_id=C.category_id
+INNER JOIN rental E on E.inventory_id=B.inventory_id
+INNER JOIN payment F on F.rental_id=E.rental_id
+GROUP BY D.name, F.amount
+ORDER BY Total_Revenue_By_Genre DESC
+
+

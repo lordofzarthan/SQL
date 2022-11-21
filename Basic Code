@@ -1,22 +1,146 @@
+Basic SQL Queries
+--Select All Columns
 
+EXPLAIN
+SELECT * FROM film;
 
+-- Select Specific Columns
 
+EXPLAIN
+SELECT film, title
+FROM film;
 
+--Select and Organize
 
+SELECT title, release_year, rental_rate 
+FROM film 
+ORDER BY 
+title, release_year, rental_rate DESC;
 
-SQL CODE FOR TECHNICAL DOCUMENT
-Customer Count & Payment Per Country
-SELECT country,
-       COUNT(DISTINCT A.customer_id) AS customer_count,
-       SUM(amount) AS total_payment
-FROM customer A
-INNER JOIN address B ON A.address_id = B.address_id
-INNER JOIN city C ON B.city_id = C.city_id
-INNER JOIN country D ON C.country_ID = D.country_ID
-INNER JOIN payment E ON a.customer_id = E.customer_id
-GROUP BY country
+-- Grouping Data
 
-Descriptive Statistics Film Table
+Select rating,
+AVG (rental_rate) as average_rental_rate
+FROM film
+GROUP by rating
+
+--ORDER AND GROUP BY
+
+Select rating,
+MIN(replacement_cost) as minimum_replacement_cost,
+MAX (replacement_cost) as maximum_replacement_cost
+FROM film
+GROUP BY rating
+ORDER BY rating
+
+--Select Wildcard
+
+SELECT film_id, title, description
+FROM film
+WHERE title LIKE '%Uptown%';
+
+--Select Length
+
+SELECT film_id, title, description
+FROM film
+WHERE length > 120 
+AND rental_rate > 2.99;
+
+--Select Time Frame
+
+SELECT film_id, title, description
+FROM film
+WHERE rental_duration >3 and rental_Duration <7;
+
+--Select Price Range
+
+SELECT film_id, title, description
+FROM film
+WHERE replacement_cost < 14.99
+
+--Selet Specific Categories within column
+
+SELECT film_id, title, description
+FROM film
+WHERE rating IN ('PG','G')
+
+-- Select Count, Average, Max and Min 
+
+SELECT rating,
+ COUNT(title) AS number_of_film,
+ AVG(rental_rate) AS average_movie_rental_rate,
+ MAX(rental_duration) AS maximum_rental_duration,
+ MIN(rental_duration) AS minimum_rental_duration
+FROM film
+WHERE rating IN  ('PG','G')
+GROUP BY rating;
+
+--Check Non Uniform Values Film Table
+
+ SELECT DISTINCT rating
+FROM film
+GROUP BY rating
+
+--Values could be updated to make them uniform within database. Columns could also be assigned a data type and other constraints to ensure consistency when new records are being added/updated.
+
+--Check Duplicate Values Film Table
+
+SELECT title,
+release_year,
+language_id,
+rental_duration,
+COUNT(*)
+FROM film
+GROUP BY title,
+release_year,
+language_id,
+rental_duration
+HAVING COUNT(*) >1;
+
+--Check Duplicate Values Customer Table
+
+SELECT first_name,
+last_name,
+address_id,
+email,
+active,
+COUNT(*)
+FROM customer
+GROUP BY first_name,
+last_name,
+address_id,
+email,
+active
+HAVING COUNT(*) >1;
+
+-- Duplicate values can be hidden using the view option or deleted. Alternatively, the query can be limited to distinct values.
+
+-- Check Missing Values Film Table
+
+SELECT
+COUNT(title) AS count_title,
+COUNT(rental_duration) AS count_rental_duration,
+COUNT(rental_rate) AS count_rental_rate,
+COUNT(length) AS count_length,
+COUNT(replacement_cost) AS count_replacement_cost,
+COUNT(*) AS count_rows
+FROM film;
+
+-- Check Missing Values Customer Table
+
+SELECT
+COUNT(email) AS count_email,
+COUNT(last_name) AS count_last_name,
+COUNT(first_name) AS count_first_name,
+COUNT(customer_id) AS count_customer_id,
+COUNT(store_id) AS count_store_id,
+COUNT(*) AS count_rows
+FROM customer;
+
+--Missing numerical values could be added using the column average as a replacment/placeholder number or the entire column could be ignored in query 
+
+-- Descriptive Statistics Film Table
+
 SELECT MIN(rental_rate) AS min_renatl_rate,
 MAX(rental_rate) AS max_rental_rate,
 AVG(rental_rate) AS avg_rental_rate,
@@ -37,7 +161,8 @@ MAX(replacement_cost) AS max_replacement_cost,
 AVG(replacement_cost) AS avg_replacement_cost
 FROM film
 
-Descriptive Statistics Customer Table
+-- Descriptive Statistics Customer Table
+
 SELECT MIN(active) AS min_active,
 MAX(active) AS max_active,
 AVG(active) AS avg_active,
@@ -52,7 +177,157 @@ MAX(store_id) AS max_store,
 AVG(store_id) AS avg_store
 FROM customer;
 
-Top 10 Countries for Rockbuster in Terms of Customer Numbers.
+--Mode Film Table
+
+SELECT mode() WITHIN GROUP (ORDER BY rating)
+AS rating_value,
+mode() WITHIN GROUP (ORDER BY special_features)
+AS Feature_value,
+mode() WITHIN GROUP (ORDER BY release_year)
+AS year_value,
+mode() WITHIN GROUP (ORDER BY title)
+AS title_value
+FROM film;
+
+-- Mode Customer Table
+
+SELECT mode() WITHIN GROUP (ORDER BY first_name)
+AS first_name_value,
+mode() WITHIN GROUP (ORDER BY last_name)
+AS last_name_value,
+mode() WITHIN GROUP (ORDER BY email)
+AS email_value
+FROM customer;
+
+--Adding Categories
+
+- Check what is already in table
+
+SELECT * FROM category
+
+--Add Category
+
+INSERT INTO category(name) VALUES ('Thriller'), ('Crime'), ('Mystery'),('Romance'),('War')
+
+-- Updating Information
+
+--  Find what you want to change:
+
+SELECT* FROM FILM 
+WHERE title= 'Almost Famous' 
+
+--Once you have the film_ID and category_ID, write an UPDATE command to change the category
+
+-- in the film_category table (not the category table).
+
+SELECT * FROM film_category WHERE film_id = 5
+--
+UPDATE film_category SET category_id = 17 WHERE film_id = 5
+
+-- Common Table Expressions
+
+--Step 1 CTE
+
+EXPLAIN
+WITH average_total_amount_paid_cte(amount,customer_id,
+								  first_name,last_name,city, country,
+								   total_amount_paid) AS
+(SELECT A.amount,B.customer_id, B.first_name, B.last_name,D.city, E.country,
+SUM(amount) AS total_amount_paid
+FROM payment A
+INNER JOIN customer B on A.customer_id=B.customer_id
+INNER JOIN address C ON B.address_id = C.address_id
+INNER JOIN city D ON C.city_id = D.city_id
+INNER JOIN country E on D.country_id = E.country_id
+WHERE city IN('Aurora','Atlixco','Xintai','Adoni','Dhule(Dhulia)',
+				 'Kurashiki','Pingxiang', 'Ozamis','Nezahualcyotl','So Leopoldo')
+GROUP BY A.amount, B.customer_id,B.first_name,D.city,E.country
+ORDER BY SUM(amount) DESC
+LIMIT 5)
+SELECT AVG(total_amount_paid) AS average_total_amount_paid
+FROM average_total_amount_paid_cte
+
+--Step 2 CTE
+
+EXPLAIN
+WITH top_customer_count_cte(amount,customer_id,first_name,last_name,city,country,total_amount_paid) AS
+	(SELECT A.amount,B.customer_id,B.first_name,B.last_name,D.city,E.country,
+SUM(amount) AS total_amount_paid
+	 FROM payment A
+INNER JOIN customer B on A.customer_id=B.customer_id
+INNER JOIN address C ON B.address_id = C.address_id
+INNER JOIN city D ON C.city_id = D.city_id
+INNER JOIN country E on D.country_id = E.country_id
+WHERE city IN('Aurora','Atlixco','Xintai','Adoni','Dhule(Dhulia)',
+				 'Kurashiki','Pingxiang', 'Ozamis','Nezahualcyotl','So Leopoldo')
+GROUP BY A.amount, B.customer_id,B.first_name,D.city,E.country
+ORDER BY SUM(amount) DESC LIMIT 5),
+customer_count_cte AS (SELECT D.country,COUNT(DISTINCT A.customer_id) AS all_customer_count,
+COUNT(DISTINCT D.country) AS top_customer_count
+FROM customer A
+INNER JOIN address B ON A.address_id=B.address_id
+INNER JOIN city C ON b.city_id=C.city_id
+INNER JOIN country D ON C.country_id=D.country_id
+GROUP BY D.country)
+SELECT D.country, COUNT(distinct A.customer_id) AS all_customer_count,
+COUNT(DISTINCT top_customer_count_cte.customer_id) AS top_customer_count
+FROM customer A
+INNER JOIN address B on A.address_id=B.address_id
+INNER JOIN city C on B.city_id=C.city_id
+INNER JOIN country D on C.country_id=D.country_id
+LEFT JOIN top_customer_count_cte ON D.country=Top_customer_count_cte.country
+GROUP BY D.country
+ORDER by top_customer_count DESC
+LIMIT 5
+
+-- SUBQUERYING
+
+--Step 1 Subquery
+
+EXPLAIN
+Select AVG (total_amount_paid) AS average_total_amount_paid
+FROM
+ (Select A.amount,B.customer_id, B.first_name, B.last_name,D.city, E.country,
+SUM (amount) AS total_amount_paid
+FROM payment A
+INNER JOIN customer B on A.customer_id=B.customer_id
+INNER JOIN address C on B.address_id=C.address_id
+INNER JOIN city D ON C. city_id=D.city_id
+INNER JOIN country E on D.country_id=E.country_id
+WHERE city IN('Aurora','Atlixco','Xintai','Adoni','Dhule(Dhulia)',
+				 'Kurashiki','Pingxiang', 'Ozamis','Nezahualcyotl','So Leopoldo')
+GROUP BY A.amount, B.customer_id,B.first_name,D.city,E.country
+ORDER BY SUM(amount) DESC
+LIMIT 5) as total_amount_paid
+
+-- Step 2 Subquery
+
+EXPLAIN
+SELECT D.country,COUNT(DISTINCT A.customer_id) AS all_customer_count,
+COUNT(DISTINCT D.country) AS top_customer_count
+FROM customer A
+INNER JOIN address B ON A.address_id=B.address_id
+INNER JOIN city C ON b.city_id=C.city_id
+INNER JOIN country D ON C.country_id=D.country_id
+LEFT JOIN (SELECT A.amount, B.customer_id,B.first_name, B.last_name, D.city, E.country,
+SUM (amount) AS total_amount_paid
+FROM payment A
+INNER JOIN customer B on A.customer_id=B.customer_id
+INNER JOIN address C on B.address_id=C.address_id
+INNER JOIN city D ON C. city_id=D.city_id
+INNER JOIN country E on D.country_id=E.country_id
+WHERE city IN('Aurora','Atlixco','Xintai','Adoni','Dhule(Dhulia)',
+				 'Kurashiki','Pingxiang', 'Ozamis','Nezahualcyotl','So Leopoldo')
+GROUP BY A.amount, B.customer_id,B.first_name,D.city,E.country
+ORDER BY SUM(amount) DESC
+LIMIT 5) as top_5_customers
+ON D.country = top_5_customers.country
+GROUP BY D.country,top_5_customers
+ORDER BY all_customer_count DESC
+LIMIT 5;
+
+--Top 10
+
 SELECT D.country, count(A.customer_id) as number_of_customers
 FROM Customer A
 INNER JOIN address B on A.address_id = B.address_id
@@ -62,7 +337,63 @@ GROUP BY D.country
 ORDER BY COUNT(A.customer_id) DESC
 LIMIT 10
 
-Top 10 Cities within the Top 10 countries
+--Top 10 Within Top 10.
+
+SELECT C.city, D.country, count(A.customer_id) as number_of_customers
+FROM Customer A
+INNER JOIN address B on A.address_id = B.address_ID
+INNER JOIN city C on B.city_id = C. city_id
+INNER JOIN country D on C.country_id = D.country_id
+WHERE D.country IN ('India', 'China', 'United States','Japan','Mexico','Brazil','Russian Federation', 'Philippines')
+GROUP BY C.city, D.COuntry
+ORDER BY COUNT (A.customer_id) DESC
+LIMIT 10
+
+-- Top 5 customers in the top 10 cities who have paid the highest total amounts 
+
+SELECT A.customer_id
+		A.first_name
+		A.last_name
+		D.city
+		E.country
+SUM (B.Amount) as total_amount_paid
+FROM Customer A
+INNER JOIN payment B on A.customer_Id = B.customer_id
+INNER JOIN address c on A.address_id= C.address_id
+INNER JOIN city D on C.city_id = D.city_id
+INNER JOIN country E on D.country_id = E.country_ID
+WHERE D.city IN ('Aurora','Atlixco','Xintai','Adoni','Dhule(Dhulia)',
+				 'Kurashiki','Pingxiang', 'Ozamis','Nezahualcyotl','So Leopoldo')
+GROUP BY A.customer_id, A.first_name, A.last_name, D.city, E.country
+ORDER BY total_amount_paid DESC
+LIMIT 5
+
+--SQL CODE FOR  SQL CASE STUDY TECHNICAL DOCUMENT
+-- Customer Count & Payment Per Country
+
+SELECT country,
+       COUNT(DISTINCT A.customer_id) AS customer_count,
+       SUM(amount) AS total_payment
+FROM customer A
+INNER JOIN address B ON A.address_id = B.address_id
+INNER JOIN city C ON B.city_id = C.city_id
+INNER JOIN country D ON C.country_ID = D.country_ID
+INNER JOIN payment E ON a.customer_id = E.customer_id
+GROUP BY country
+
+--Top 10  Countries by Users
+
+SELECT D.country, count(A.customer_id) as number_of_customers
+FROM Customer A
+INNER JOIN address B on A.address_id = B.address_id
+INNER JOIN city C on B.city_id = C.city_id
+INNER JOIN country D on C.country_id = D.country_id
+GROUP BY D.country
+ORDER BY COUNT(A.customer_id) DESC
+LIMIT 10
+
+--Top 10 Cities within the Top 10 countries
+
 SELECT C.city, D.country, count(A.customer_id) as number_of_customers
 FROM Customer A
 INNER JOIN address B on A.address_id = B.address_ID
@@ -74,7 +405,8 @@ GROUP BY C.city, D.COuntry
 ORDER BY COUNT (A.customer_id) DESC
 LIMIT 10
 
-Top 5 Customers in the Top 10 Cities who have Highest Payment
+--Top 5 Customers in the Top 10 Cities who have Highest Payment
+
 SELECT A.customer_id
 A.first_name
 A.last_name
@@ -92,7 +424,8 @@ GROUP BY A.customer_id, A.first_name, A.last_name, D.city, E.country
 ORDER BY total_amount_paid DESC
 LIMIT 5
 
-Total Revenue Of Film by Genre
+--Total Revenue Of Film by Genre
+
 SELECT D.name,
 SUM (F.amount) as Total_Revenue_By_Genre
 FROM film A
@@ -103,5 +436,4 @@ INNER JOIN rental E on E.inventory_id=B.inventory_id
 INNER JOIN payment F on F.rental_id=E.rental_id
 GROUP BY D.name, F.amount
 ORDER BY Total_Revenue_By_Genre DESC
-
 
